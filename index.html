@@ -2,26 +2,30 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Website Saya</title>
+    <title>Panel Monitoring Firebase</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
     <header>
-        <h1>Selamat Datang di Website Saya</h1>
-        <p>Website ini di-host menggunakan GitHub Pages</p>
+        <h1>Panel Monitoring</h1>
+        <p>Data realtime dari Firebase</p>
     </header>
 
     <main>
-        <section class="card">
-            <h2>Tentang Saya</h2>
-            <p>Ini adalah contoh website sederhana untuk tugas sekolah.</p>
-            <button onclick="tampilkanPesan()">Klik Saya</button>
-        </section>
+        <div class="card">
+            <h2>Data Sensor</h2>
+            <p>Suhu: <span id="suhu">-</span> °C</p>
+            <p>Kelembaban: <span id="kelembaban">-</span> %</p>
+        </div>
     </main>
 
     <footer>
-        <p>© 2026 - Website Saya</p>
+        <p>© 2026 - Firebase Monitoring</p>
     </footer>
 
     <script src="script.js"></script>
