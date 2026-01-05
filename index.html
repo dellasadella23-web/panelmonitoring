@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Monitoring Firebase</title>
+    <title>Panel Monitoring PV</title>
     <link rel="stylesheet" href="style.css">
 
     <!-- Firebase SDK -->
@@ -11,23 +11,23 @@
 </head>
 <body>
 
-    <header>
-        <h1>Panel Monitoring</h1>
-        <p>Data realtime dari Firebase</p>
-    </header>
+<header>
+    <h1>Panel Monitoring PLTS</h1>
+    <p>Realtime dari Firebase</p>
+</header>
 
-    <main>
-        <div class="card">
-            <h2>Data Sensor</h2>
-            <p>Suhu: <span id="suhu">-</span> °C</p>
-            <p>Kelembaban: <span id="kelembaban">-</span> %</p>
-        </div>
-    </main>
+<main>
+    <div class="card">
+        <p>Tegangan (V): <span id="voltage">-</span></p>
+        <p>Arus (A): <span id="current">-</span></p>
+        <p>Daya (W): <span id="power">-</span></p>
+    </div>
+</main>
 
-    <footer>
-        <p>© 2026 - Firebase Monitoring</p>
-    </footer>
+<footer>
+    <p>© 2026 Panel Monitoring</p>
+</footer>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
