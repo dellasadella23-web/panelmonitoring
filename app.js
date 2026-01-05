@@ -21,9 +21,13 @@ const monitoringRef = database.ref("monitoring");
 // 🔹 BACA DATA REALTIME
 monitoringRef.on("value", (snapshot) => {
     const data = snapshot.val();
+   console.log("DATA FIREBASE:", data);
 
+   if (data) {
     document.getElementById("voltage").innerText = data.pv_voltage;
     document.getElementById("current").innerText = data.pv_current;
     document.getElementById("power").innerText = data.pv_power;
+   }
 });
+
 
