@@ -16,12 +16,14 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 // 🔹 REFERENSI DATA
-const dataRef = database.ref("sensor");
+const monitoringRef = database.ref("monitoring");
 
 // 🔹 BACA DATA REALTIME
-dataRef.on("value", (snapshot) => {
+monitoringRef.on("value", (snapshot) => {
     const data = snapshot.val();
 
-    document.getElementById("suhu").innerText = data.suhu;
-    document.getElementById("kelembaban").innerText = data.kelembaban;
+    document.getElementById("voltage").innerText = data.pv_voltage;
+    document.getElementById("current").innerText = data.pv_current;
+    document.getElementById("power").innerText = data.pv_power;
 });
+
