@@ -13,15 +13,6 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const monitoringRef = database.ref("monitoring");
 
-// ================= SMOOTHING =================
-const alpha = 0.3;
-let sV = null, sI = null, sP = null;
-
-function smooth(prev, curr) {
-  if (prev === null) return curr;
-  return alpha * curr + (1 - alpha) * prev;
-}
-
 // ================= CHART =================
 const ctx = document.getElementById("pvChart").getContext("2d");
 
@@ -31,61 +22,34 @@ const pvChart = new Chart(ctx, {
     labels: [],
     datasets: [
       {
-        label: "V Asli",
+        label: "Tegangan (V)",
         data: [],
-        borderColor: "#4fc3f7",
-        tension: 0.4,
-        showLine: true,
-        spanGaps: true,
-        pointRadius: 2
+        borderColor: "#42a5f5",
+        backgroundColor: "#42a5f5",
+        yAxisID: "yV",
+        tension: 0.3,
+        pointRadius: 4,
+        fill: false
       },
       {
-        label: "V Smooth",
+        label: "Arus (A)",
         data: [],
-        borderColor: "#ff6384",
-        borderDash: [5, 5],
-        tension: 0.4,
-        showLine: true,
-        spanGaps: true,
-        pointRadius: 0
+        borderColor: "#ff5252",
+        backgroundColor: "#ff5252",
+        yAxisID: "yI",
+        tension: 0.3,
+        pointRadius: 4,
+        fill: false
       },
       {
-        label: "I Asli",
+        label: "Daya (W)",
         data: [],
-        borderColor: "#ff9800",
-        tension: 0.4,
-        showLine: true,
-        spanGaps: true,
-        pointRadius: 2
-      },
-      {
-        label: "I Smooth",
-        data: [],
-        borderColor: "#ffd54f",
-        borderDash: [5, 5],
-        tension: 0.4,
-        showLine: true,
-        spanGaps: true,
-        pointRadius: 0
-      },
-      {
-        label: "P Asli",
-        data: [],
-        borderColor: "#4db6ac",
-        tension: 0.4,
-        showLine: true,
-        spanGaps: true,
-        pointRadius: 2
-      },
-      {
-        label: "P Smooth",
-        data: [],
-        borderColor: "#b388ff",
-        borderDash: [5, 5],
-        tension: 0.4,
-        showLine: true,
-        spanGaps: true,
-        pointRadius: 0
+        borderColor: "#ffa726",
+        backgroundColor: "#ffa726",
+        yAxisID: "yP",
+        tension: 0.3,
+        pointRadius: 4,
+        fill: false
       }
     ]
   },
@@ -93,25 +57,58 @@ const pvChart = new Chart(ctx, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    interaction: {
+      mode: "index",
+      intersect: false
+    },
+    plugins: {
+      legend: {
+        position: "top"
+      }
+    },
     scales: {
-      x: { ticks: { maxRotation: 0 } }
+      yV: {
+        type: "linear",
+        position: "left",
+        title: {
+          display: true,
+          text: "Tegangan (V)"
+        }
+      },
+      yI: {
+        type: "linear",
+        position: "right",
+        title: {
+          display: true,
+          text: "Arus (A)"
+        },
+        grid: {
+          drawOnChartArea: false
+        }
+      },
+      yP: {
+        type: "linear",
+        position: "right",
+        title: {
+          display: true,
+          text: "Daya (W)"
+        },
+        grid: {
+          drawOnChartArea: false
+        }
+      }
     }
   }
 });
 
-// ================= CSV =================
-let csvData = [];
-
-// ================= REALTIME (ANTI 0 & NaN & HP SAFE) =================
-let lastV = null, lastI = null, lastP = null;
-
+// ================= REALTIME DATA =================
 monitoringRef.on("value", snap => {
   if (!snap.exists()) return;
 
   let d = snap.val();
 
-  // 🔥 JIKA DATA BENTUK PUSH (OBJECT)
-  if (typeof d === "object" && d.pv_voltage === undefined) {
+  // Jika data hasil push ESP32
+  if (typeof d === "object" && !d.pv_voltage) {
     const keys = Object.keys(d);
     if (keys.length === 0) return;
     d = d[keys[keys.length - 1]];
@@ -123,23 +120,19 @@ monitoringRef.on("value", snap => {
   const I = parseFloat(d.pv_current);
   const P = parseFloat(d.pv_power);
 
-  if (!isNaN(V)) lastV = V;
-  if (!isNaN(I)) lastI = I;
-  if (!isNaN(P)) lastP = P;
+  // STOP jika data tidak valid
+  if (isNaN(V) || isNaN(I) || isNaN(P)) return;
 
-  // ⛔ STOP JIKA BELUM ADA DATA VALID
-  if (lastV === null || lastI === null || lastP === null) return;
+  // UPDATE NILAI TEKS
+  document.getElementById("voltage").innerText = V.toFixed(2);
+  document.getElementById("current").innerText = I.toFixed(2);
+  document.getElementById("power").innerText = P.toFixed(2);
 
-  // ================= UI =================
-  document.getElementById("voltage").innerText = lastV.toFixed(2);
-  document.getElementById("current").innerText = lastI.toFixed(2);
-  document.getElementById("power").innerText = lastP.toFixed(2);
-
-  // ================= STATUS =================
+  // STATUS TEGANGAN
   const statusBox = document.getElementById("statusBox");
   const statusText = document.getElementById("statusText");
 
-  if (lastV < 41.1) {
+  if (V < 41.10) {
     statusBox.className = "status warning";
     statusText.innerText = "WARNING - TEGANGAN RENDAH";
   } else {
@@ -147,35 +140,18 @@ monitoringRef.on("value", snap => {
     statusText.innerText = "NORMAL";
   }
 
-  // ================= SMOOTH =================
-  sV = smooth(sV, lastV);
-  sI = smooth(sI, lastI);
-  sP = smooth(sP, lastP);
-
   const time = new Date().toLocaleTimeString();
 
-  if (pvChart.data.labels.length > 30) {
+  // BATASI DATA (AGAR RINGAN DI HP)
+  if (pvChart.data.labels.length > 20) {
     pvChart.data.labels.shift();
     pvChart.data.datasets.forEach(ds => ds.data.shift());
   }
 
   pvChart.data.labels.push(time);
-  pvChart.data.datasets[0].data.push(lastV);
-  pvChart.data.datasets[1].data.push(sV);
-  pvChart.data.datasets[2].data.push(lastI);
-  pvChart.data.datasets[3].data.push(sI);
-  pvChart.data.datasets[4].data.push(lastP);
-  pvChart.data.datasets[5].data.push(sP);
+  pvChart.data.datasets[0].data.push(V);
+  pvChart.data.datasets[1].data.push(I);
+  pvChart.data.datasets[2].data.push(P);
 
   pvChart.update();
-
-  csvData.push({
-    time,
-    V: lastV,
-    I: lastI,
-    P: lastP,
-    sV,
-    sI,
-    sP
-  });
 });
