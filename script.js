@@ -22,24 +22,25 @@ function smooth(prev, curr) {
     return alpha * curr + (1 - alpha) * prev;
 }
 
-// ===== CSV STORAGE =====
+// ===== CSV =====
 let csvData = [];
 
 // ===== CHART =====
 const ctx = document.getElementById("pvChart").getContext("2d");
+
 const pvChart = new Chart(ctx, {
     type: "line",
     data: {
         labels: [],
         datasets: [
-            { label: "V Asli", data: [], tension: 0.4 },
-            { label: "V Smooth", data: [], borderDash: [5,5], tension: 0.4 },
+            { label: "V Asli", data: [], borderColor: "#4fc3f7", tension: 0.4 },
+            { label: "V Smooth", data: [], borderColor: "#ff6384", borderDash: [5,5], tension: 0.4 },
 
-            { label: "I Asli", data: [], tension: 0.4 },
-            { label: "I Smooth", data: [], borderDash: [5,5], tension: 0.4 },
+            { label: "I Asli", data: [], borderColor: "#ff9800", tension: 0.4 },
+            { label: "I Smooth", data: [], borderColor: "#ffd54f", borderDash: [5,5], tension: 0.4 },
 
-            { label: "P Asli", data: [], tension: 0.4 },
-            { label: "P Smooth", data: [], borderDash: [5,5], tension: 0.4 }
+            { label: "P Asli", data: [], borderColor: "#4db6ac", tension: 0.4 },
+            { label: "P Smooth", data: [], borderColor: "#b388ff", borderDash: [5,5], tension: 0.4 }
         ]
     }
 });
@@ -57,7 +58,6 @@ monitoringRef.on("value", snap => {
     document.getElementById("current").innerText = I;
     document.getElementById("power").innerText = P;
 
-    // WARNING
     const statusBox = document.getElementById("statusBox");
     const statusText = document.getElementById("statusText");
 
@@ -69,14 +69,13 @@ monitoringRef.on("value", snap => {
         statusText.innerText = "NORMAL";
     }
 
-    // SMOOTH
     sV = smooth(sV, V);
     sI = smooth(sI, I);
     sP = smooth(sP, P);
 
     const time = new Date().toLocaleTimeString();
 
-    if (pvChart.data.labels.length > 15) {
+    if (pvChart.data.labels.length > 20) {
         pvChart.data.labels.shift();
         pvChart.data.datasets.forEach(ds => ds.data.shift());
     }
@@ -91,9 +90,7 @@ monitoringRef.on("value", snap => {
 
     pvChart.update();
 
-    csvData.push({
-        time, V, sV, I, sI, P, sP
-    });
+    csvData.push({ time, V, sV, I, sI, P, sP });
 });
 
 // ===== EXPORT CSV =====
@@ -110,14 +107,15 @@ function exportCSV() {
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
 
+    const a = document.createElement("a");
     a.href = url;
     a.download = "monitoring_pv.csv";
     a.click();
 }
 
  
+
 
 
 
