@@ -50,37 +50,44 @@ const pvChart = new Chart(ctx, {
 let csvData = [];
 
 // ================= REALTIME (ANTI 0 & NaN) =================
+let lastV = null, lastI = null, lastP = null;
+
 monitoringRef.on("value", snap => {
   if (!snap.exists()) return;
 
-  let data = snap.val();
+  let d = snap.val();
 
-  // 🔥 JIKA DATA LIST (push)
-  if (typeof data === "object" && !data.pv_voltage) {
-    const keys = Object.keys(data);
+  // Jika data list (push)
+  if (typeof d === "object" && !d.pv_voltage) {
+    const keys = Object.keys(d);
     if (keys.length === 0) return;
-    data = data[keys[keys.length - 1]];
+    d = d[keys[keys.length - 1]];
   }
 
-  if (!data) return;
+  if (!d) return;
 
-  const V = parseFloat(data.pv_voltage);
-  const I = parseFloat(data.pv_current);
-  const P = parseFloat(data.pv_power);
+  const V = parseFloat(d.pv_voltage);
+  const I = parseFloat(d.pv_current);
+  const P = parseFloat(d.pv_power);
 
-  // 🔥 JANGAN TAMPILKAN JIKA BELUM VALID
-  if (isNaN(V) || isNaN(I) || isNaN(P)) return;
+  // 🔥 SIMPAN NILAI TERAKHIR YANG VALID
+  if (!isNaN(V)) lastV = V;
+  if (!isNaN(I)) lastI = I;
+  if (!isNaN(P)) lastP = P;
 
-  // ===== UPDATE CARD =====
-  document.getElementById("voltage").innerText = V.toFixed(2);
-  document.getElementById("current").innerText = I.toFixed(2);
-  document.getElementById("power").innerText = P.toFixed(2);
+  // 🔥 JIKA BELUM ADA NILAI SAMA SEKALI, STOP
+  if (lastV === null || lastI === null || lastP === null) return;
+
+  // ===== UPDATE UI =====
+  document.getElementById("voltage").innerText = lastV.toFixed(2);
+  document.getElementById("current").innerText = lastI.toFixed(2);
+  document.getElementById("power").innerText = lastP.toFixed(2);
 
   // ===== STATUS =====
   const statusBox = document.getElementById("statusBox");
   const statusText = document.getElementById("statusText");
 
-  if (V < 41.10) {
+  if (lastV < 41.10) {
     statusBox.className = "status warning";
     statusText.innerText = "WARNING - TEGANGAN RENDAH";
   } else {
@@ -89,9 +96,9 @@ monitoringRef.on("value", snap => {
   }
 
   // ===== SMOOTHING =====
-  sV = smooth(sV, V);
-  sI = smooth(sI, I);
-  sP = smooth(sP, P);
+  sV = smooth(sV, lastV);
+  sI = smooth(sI, lastI);
+  sP = smooth(sP, lastP);
 
   const time = new Date().toLocaleTimeString();
 
@@ -101,35 +108,16 @@ monitoringRef.on("value", snap => {
   }
 
   pvChart.data.labels.push(time);
-  pvChart.data.datasets[0].data.push(V);
+  pvChart.data.datasets[0].data.push(lastV);
   pvChart.data.datasets[1].data.push(sV);
-  pvChart.data.datasets[2].data.push(I);
+  pvChart.data.datasets[2].data.push(lastI);
   pvChart.data.datasets[3].data.push(sI);
-  pvChart.data.datasets[4].data.push(P);
+  pvChart.data.datasets[4].data.push(lastP);
   pvChart.data.datasets[5].data.push(sP);
 
   pvChart.update();
 
-  csvData.push({ time, V, sV, I, sI, P, sP });
+  csvData.push({ time, V: lastV, I: lastI, P: lastP, sV, sI, sP });
 });
 
-// ================= EXPORT CSV =================
-function exportCSV() {
-  if (csvData.length === 0) {
-    alert("Data masih kosong");
-    return;
-  }
 
-  let csv = "Waktu,V,V_smooth,I,I_smooth,P,P_smooth\n";
-  csvData.forEach(r => {
-    csv += `${r.time},${r.V},${r.sV},${r.I},${r.sI},${r.P},${r.sP}\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "monitoring_pv.csv";
-  a.click();
-}
