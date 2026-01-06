@@ -1,133 +1,112 @@
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 body {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #071a3d, #030b1f);
-    color: white;
+    margin: 0;
+    background: linear-gradient(180deg, #04162f, #062a4d);
+    color: #ffffff;
 }
 
-/* NAVBAR */
-.navbar {
-    padding: 18px 35px;
-    background: rgba(0,0,0,0.35);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 5px 25px rgba(0,140,255,0.25);
-    display: flex;
-    justify-content: center;
-}
-
-.brand {
+/* HEADER */
+.header {
     display: flex;
     align-items: center;
-    gap: 14px;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px;
+    background: #020f23;
 }
 
-.brand img {
-    height: 42px;
+.logo {
+    width: 50px;
+    height: auto;
 }
 
-.brand span {
-    font-size: 20px;
-    font-weight: 600;
-    color: #9ecbff;
-}
-
-/* DASHBOARD */
-.dashboard {
-    padding: 35px;
-    max-width: 1400px;
-    margin: auto;
+h1 {
+    margin: 0;
+    color: #9fd0ff;
 }
 
 /* STATUS */
 .status {
-    margin-bottom: 20px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 800px;
     padding: 15px;
-    border-radius: 12px;
     text-align: center;
+    border-radius: 10px;
     font-weight: bold;
 }
 
 .status.normal {
-    background: rgba(0,255,0,0.15);
-    color: #7CFF7C;
-    box-shadow: 0 0 15px rgba(0,255,0,0.35);
+    background: #0c5;
 }
 
 .status.warning {
-    background: rgba(255,0,0,0.25);
-    color: #FF6B6B;
-    box-shadow: 0 0 20px rgba(255,0,0,0.45);
+    background: #c0392b;
 }
 
-/* EXPORT */
-.export-area {
+/* BUTTON */
+.center {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
-.export-btn {
-    background: linear-gradient(135deg, #1e90ff, #0055ff);
-    color: white;
+button {
+    padding: 12px 25px;
     border: none;
-    padding: 12px 26px;
-    border-radius: 10px;
-    font-weight: bold;
+    border-radius: 8px;
+    background: #1e90ff;
+    color: white;
+    font-size: 16px;
     cursor: pointer;
-    box-shadow: 0 0 15px rgba(0,140,255,0.4);
 }
 
-.export-btn:hover {
-    opacity: 0.85;
+button:hover {
+    background: #0d6efd;
 }
 
 /* CARDS */
 .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 22px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 20px;
 }
 
 .card {
     background: rgba(255,255,255,0.08);
-    padding: 28px;
-    border-radius: 18px;
+    width: 220px;
+    padding: 25px;
+    border-radius: 15px;
     text-align: center;
 }
 
 .card h3 {
-    color: #9ecbff;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    color: #8ecbff;
 }
 
 .card p {
-    font-size: 34px;
-    font-weight: bold;
-}
-
-.glow {
-    box-shadow: 0 0 25px rgba(0,140,255,0.35);
+    font-size: 32px;
+    margin: 0;
 }
 
 /* CHART */
 .chart-box {
-    margin-top: 35px;
-    padding: 28px;
-    border-radius: 18px;
+    width: 95%;
+    max-width: 1100px;
+    margin: 30px auto;
+    background: rgba(255,255,255,0.06);
+    padding: 20px;
+    border-radius: 15px;
 }
 
-.glass {
-    background: rgba(255,255,255,0.07);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 0 28px rgba(0,140,255,0.25);
-}
-
-.chart-box h3 {
-    margin-bottom: 18px;
-    color: #9ecbff;
+.chart-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #a8d8ff;
 }
