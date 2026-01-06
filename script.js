@@ -30,26 +30,79 @@ const pvChart = new Chart(ctx, {
   data: {
     labels: [],
     datasets: [
-      { label: "V Asli", data: [], borderColor: "#4fc3f7", tension: 0.4 },
-      { label: "V Smooth", data: [], borderColor: "#ff6384", borderDash: [5,5], tension: 0.4 },
-
-      { label: "I Asli", data: [], borderColor: "#ff9800", tension: 0.4 },
-      { label: "I Smooth", data: [], borderColor: "#ffd54f", borderDash: [5,5], tension: 0.4 },
-
-      { label: "P Asli", data: [], borderColor: "#4db6ac", tension: 0.4 },
-      { label: "P Smooth", data: [], borderColor: "#b388ff", borderDash: [5,5], tension: 0.4 }
+      {
+        label: "V Asli",
+        data: [],
+        borderColor: "#4fc3f7",
+        tension: 0.4,
+        showLine: true,
+        spanGaps: true,
+        pointRadius: 2
+      },
+      {
+        label: "V Smooth",
+        data: [],
+        borderColor: "#ff6384",
+        borderDash: [5, 5],
+        tension: 0.4,
+        showLine: true,
+        spanGaps: true,
+        pointRadius: 0
+      },
+      {
+        label: "I Asli",
+        data: [],
+        borderColor: "#ff9800",
+        tension: 0.4,
+        showLine: true,
+        spanGaps: true,
+        pointRadius: 2
+      },
+      {
+        label: "I Smooth",
+        data: [],
+        borderColor: "#ffd54f",
+        borderDash: [5, 5],
+        tension: 0.4,
+        showLine: true,
+        spanGaps: true,
+        pointRadius: 0
+      },
+      {
+        label: "P Asli",
+        data: [],
+        borderColor: "#4db6ac",
+        tension: 0.4,
+        showLine: true,
+        spanGaps: true,
+        pointRadius: 2
+      },
+      {
+        label: "P Smooth",
+        data: [],
+        borderColor: "#b388ff",
+        borderDash: [5, 5],
+        tension: 0.4,
+        showLine: true,
+        spanGaps: true,
+        pointRadius: 0
+      }
     ]
   },
   options: {
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    animation: false,
+    scales: {
+      x: { ticks: { maxRotation: 0 } }
+    }
   }
 });
 
 // ================= CSV =================
 let csvData = [];
 
-// ================= REALTIME (ANTI 0 & NaN) =================
+// ================= REALTIME (ANTI 0 & NaN & HP SAFE) =================
 let lastV = null, lastI = null, lastP = null;
 
 monitoringRef.on("value", snap => {
@@ -57,8 +110,8 @@ monitoringRef.on("value", snap => {
 
   let d = snap.val();
 
-  // Jika data list (push)
-  if (typeof d === "object" && !d.pv_voltage) {
+  // 🔥 JIKA DATA BENTUK PUSH (OBJECT)
+  if (typeof d === "object" && d.pv_voltage === undefined) {
     const keys = Object.keys(d);
     if (keys.length === 0) return;
     d = d[keys[keys.length - 1]];
@@ -70,24 +123,23 @@ monitoringRef.on("value", snap => {
   const I = parseFloat(d.pv_current);
   const P = parseFloat(d.pv_power);
 
-  // 🔥 SIMPAN NILAI TERAKHIR YANG VALID
   if (!isNaN(V)) lastV = V;
   if (!isNaN(I)) lastI = I;
   if (!isNaN(P)) lastP = P;
 
-  // 🔥 JIKA BELUM ADA NILAI SAMA SEKALI, STOP
+  // ⛔ STOP JIKA BELUM ADA DATA VALID
   if (lastV === null || lastI === null || lastP === null) return;
 
-  // ===== UPDATE UI =====
+  // ================= UI =================
   document.getElementById("voltage").innerText = lastV.toFixed(2);
   document.getElementById("current").innerText = lastI.toFixed(2);
   document.getElementById("power").innerText = lastP.toFixed(2);
 
-  // ===== STATUS =====
+  // ================= STATUS =================
   const statusBox = document.getElementById("statusBox");
   const statusText = document.getElementById("statusText");
 
-  if (lastV < 41.10) {
+  if (lastV < 41.1) {
     statusBox.className = "status warning";
     statusText.innerText = "WARNING - TEGANGAN RENDAH";
   } else {
@@ -95,14 +147,14 @@ monitoringRef.on("value", snap => {
     statusText.innerText = "NORMAL";
   }
 
-  // ===== SMOOTHING =====
+  // ================= SMOOTH =================
   sV = smooth(sV, lastV);
   sI = smooth(sI, lastI);
   sP = smooth(sP, lastP);
 
   const time = new Date().toLocaleTimeString();
 
-  if (pvChart.data.labels.length > 20) {
+  if (pvChart.data.labels.length > 30) {
     pvChart.data.labels.shift();
     pvChart.data.datasets.forEach(ds => ds.data.shift());
   }
@@ -117,7 +169,13 @@ monitoringRef.on("value", snap => {
 
   pvChart.update();
 
-  csvData.push({ time, V: lastV, I: lastI, P: lastP, sV, sI, sP });
+  csvData.push({
+    time,
+    V: lastV,
+    I: lastI,
+    P: lastP,
+    sV,
+    sI,
+    sP
+  });
 });
-
-
