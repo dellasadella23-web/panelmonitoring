@@ -29,11 +29,6 @@ body {
 
 .brand img {
     height: 42px;
-    width: auto;
-    max-width: 42px;
-    object-fit: contain;
-}
-
 }
 
 .brand span {
@@ -136,4 +131,3 @@ body {
     margin-bottom: 18px;
     color: #9ecbff;
 }
-
