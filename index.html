@@ -3,62 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title>PV Monitoring Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 
-<header class="navbar">
-    <div class="brand center">
-        <img src="LOGO TRE.png" alt="Logo">
-        <span>🌤️ Monitoring Dashboard</span>
-    </div>
+<header class="header">
+    <img src="LOGO TRE.png" class="logo" alt="Logo">
+    <h1>🌤️ Monitoring Dashboard</h1>
 </header>
 
-<main class="dashboard">
+<div id="statusBox" class="status normal">
+    <span id="statusText">NORMAL</span>
+</div>
 
-    <!-- STATUS -->
-    <div id="statusBox" class="status normal">
-        Status Tegangan: <span id="statusText">NORMAL</span>
+<div class="center">
+    <button onclick="exportCSV()">Export Data ke CSV</button>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <h3>Tegangan</h3>
+        <p><span id="voltage">-</span> V</p>
     </div>
-
-    <!-- EXPORT -->
-    <div class="export-area">
-        <button onclick="exportCSV()" class="export-btn">
-            Export Data ke CSV
-        </button>
+    <div class="card">
+        <h3>Arus</h3>
+        <p><span id="current">-</span> A</p>
     </div>
-
-    <!-- CARDS -->
-    <div class="cards">
-        <div class="card glow">
-            <h3>Tegangan</h3>
-            <p><span id="voltage">-</span> V</p>
-        </div>
-        <div class="card glow">
-            <h3>Arus</h3>
-            <p><span id="current">-</span> A</p>
-        </div>
-        <div class="card glow">
-            <h3>Daya</h3>
-            <p><span id="power">-</span> W</p>
-        </div>
+    <div class="card">
+        <h3>Daya</h3>
+        <p><span id="power">-</span> W</p>
     </div>
+</div>
 
-    <!-- CHART -->
-    <div class="chart-box glass">
-        <h3>Grafik Asli vs Exponential Smoothing</h3>
-        <canvas id="pvChart"></canvas>
-    </div>
-
-</main>
+<div class="chart-box">
+    <h2>Grafik Asli vs Exponential Smoothing</h2>
+    <canvas id="pvChart"></canvas>
+</div>
 
 <script src="script.js"></script>
 </body>
