@@ -1,4 +1,4 @@
-// ===== FIREBASE CONFIG =====
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyAhWcjyyjzd1dUAZEJ2fvGlFt1iCKCkYuE",
   authDomain: "panelmonitoring-9fda2.firebaseapp.com",
@@ -13,13 +13,7 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const monitoringRef = database.ref("monitoring");
 
-// ===== SAFE NUMBER (ANTI NaN) =====
-function safeNumber(v) {
-  const n = parseFloat(v);
-  return isNaN(n) ? 0 : n;
-}
-
-// ===== SMOOTHING =====
+// ================= SMOOTHING =================
 const alpha = 0.3;
 let sV = null, sI = null, sP = null;
 
@@ -28,10 +22,7 @@ function smooth(prev, curr) {
   return alpha * curr + (1 - alpha) * prev;
 }
 
-// ===== CSV =====
-let csvData = [];
-
-// ===== CHART =====
+// ================= CHART =================
 const ctx = document.getElementById("pvChart").getContext("2d");
 
 const pvChart = new Chart(ctx, {
@@ -55,24 +46,37 @@ const pvChart = new Chart(ctx, {
   }
 });
 
-// ===== REALTIME (AMBIL DATA TERAKHIR) =====
-monitoringRef.limitToLast(1).on("value", snap => {
+// ================= CSV =================
+let csvData = [];
+
+// ================= REALTIME (ANTI 0 & NaN) =================
+monitoringRef.on("value", snap => {
   if (!snap.exists()) return;
 
-  let d;
-  snap.forEach(child => {
-    d = child.val();
-  });
-  if (!d) return;
+  let data = snap.val();
 
-  const V = safeNumber(d.pv_voltage);
-  const I = safeNumber(d.pv_current);
-  const P = safeNumber(d.pv_power);
+  // 🔥 JIKA DATA LIST (push)
+  if (typeof data === "object" && !data.pv_voltage) {
+    const keys = Object.keys(data);
+    if (keys.length === 0) return;
+    data = data[keys[keys.length - 1]];
+  }
 
+  if (!data) return;
+
+  const V = parseFloat(data.pv_voltage);
+  const I = parseFloat(data.pv_current);
+  const P = parseFloat(data.pv_power);
+
+  // 🔥 JANGAN TAMPILKAN JIKA BELUM VALID
+  if (isNaN(V) || isNaN(I) || isNaN(P)) return;
+
+  // ===== UPDATE CARD =====
   document.getElementById("voltage").innerText = V.toFixed(2);
   document.getElementById("current").innerText = I.toFixed(2);
   document.getElementById("power").innerText = P.toFixed(2);
 
+  // ===== STATUS =====
   const statusBox = document.getElementById("statusBox");
   const statusText = document.getElementById("statusText");
 
@@ -109,7 +113,7 @@ monitoringRef.limitToLast(1).on("value", snap => {
   csvData.push({ time, V, sV, I, sI, P, sP });
 });
 
-// ===== EXPORT CSV =====
+// ================= EXPORT CSV =================
 function exportCSV() {
   if (csvData.length === 0) {
     alert("Data masih kosong");
