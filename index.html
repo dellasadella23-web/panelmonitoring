@@ -5,13 +5,12 @@
     <title>PV Monitoring Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Firebase -->
+    <!-- Firebase v8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
@@ -27,7 +26,7 @@
 </div>
 
 <div class="center">
-    <button onclick="exportCSV()">Export Data ke CSV</button>
+    <button onclick="exportTableCSV()">Export Data Tabel ke CSV</button>
 </div>
 
 <div class="cards">
@@ -46,8 +45,23 @@
 </div>
 
 <div class="chart-box">
-    <h2>Grafik Asli vs Exponential Smoothing</h2>
+    <h2>Grafik Realtime</h2>
     <canvas id="pvChart"></canvas>
+</div>
+
+<div class="table-box">
+    <h2>Data Tersimpan</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Waktu</th>
+                <th>Tegangan (V)</th>
+                <th>Arus (A)</th>
+                <th>Daya (W)</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
 </div>
 
 <script src="script.js"></script>
