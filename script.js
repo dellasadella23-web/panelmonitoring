@@ -10,8 +10,8 @@ apiKey: "AIzaSyAhWcjyyjzd1dUAZEJ2fvGlFt1iCKCkYuE",
 };
 
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const monitoringRef = database.ref("monitoring");
+const db = firebase.database();
+const monitoringRef = db.ref("monitoring");
 
 // ===== SMOOTHING =====
 const alpha = 0.3;
@@ -22,42 +22,45 @@ function smooth(prev, curr) {
     return alpha * curr + (1 - alpha) * prev;
 }
 
-// ===== CSV =====
-let csvData = [];
+// ===== DATA TABLE =====
+let tableData = [];
 
 // ===== CHART =====
 const ctx = document.getElementById("pvChart").getContext("2d");
-
 const pvChart = new Chart(ctx, {
     type: "line",
     data: {
         labels: [],
         datasets: [
             { label: "V Asli", data: [], borderColor: "#4fc3f7", tension: 0.4 },
-            { label: "V Smooth", data: [], borderColor: "#ff6384", borderDash: [5,5], tension: 0.4 },
+            { label: "V Smooth", data: [], borderDash: [5,5], borderColor: "#81d4fa", tension: 0.4 },
 
             { label: "I Asli", data: [], borderColor: "#ff9800", tension: 0.4 },
-            { label: "I Smooth", data: [], borderColor: "#ffd54f", borderDash: [5,5], tension: 0.4 },
+            { label: "I Smooth", data: [], borderDash: [5,5], borderColor: "#ffb74d", tension: 0.4 },
 
             { label: "P Asli", data: [], borderColor: "#4db6ac", tension: 0.4 },
-            { label: "P Smooth", data: [], borderColor: "#b388ff", borderDash: [5,5], tension: 0.4 }
+            { label: "P Smooth", data: [], borderDash: [5,5], borderColor: "#80cbc4", tension: 0.4 }
         ]
     }
 });
 
 // ===== REALTIME =====
-monitoringRef.on("value", snap => {
+const tableBody = document.getElementById("dataTable");
+
+monitoringRef.limitToLast(50).on("child_added", snap => {
     const d = snap.val();
     if (!d) return;
 
-    const V = d.pv_voltage;
-    const I = d.pv_current;
-    const P = d.pv_power;
+    const V = Number(d.pv_voltage);
+    const I = Number(d.pv_current);
+    const P = Number(d.pv_power);
 
+    // tampil nilai utama
     document.getElementById("voltage").innerText = V;
     document.getElementById("current").innerText = I;
     document.getElementById("power").innerText = P;
 
+    // WARNING TEGANGAN
     const statusBox = document.getElementById("statusBox");
     const statusText = document.getElementById("statusText");
 
@@ -69,40 +72,58 @@ monitoringRef.on("value", snap => {
         statusText.innerText = "NORMAL";
     }
 
+    // ===== SMOOTHING =====
     sV = smooth(sV, V);
     sI = smooth(sI, I);
     sP = smooth(sP, P);
 
-    const time = new Date().toLocaleTimeString();
+    // ===== CHART UPDATE =====
+    pvChart.data.labels.push(d.time);
+
+    pvChart.data.datasets[0].data.push(V);
+    pvChart.data.datasets[1].data.push(sV);
+
+    pvChart.data.datasets[2].data.push(I);
+    pvChart.data.datasets[3].data.push(sI);
+
+    pvChart.data.datasets[4].data.push(P);
+    pvChart.data.datasets[5].data.push(sP);
 
     if (pvChart.data.labels.length > 20) {
         pvChart.data.labels.shift();
         pvChart.data.datasets.forEach(ds => ds.data.shift());
     }
 
-    pvChart.data.labels.push(time);
-    pvChart.data.datasets[0].data.push(V);
-    pvChart.data.datasets[1].data.push(sV);
-    pvChart.data.datasets[2].data.push(I);
-    pvChart.data.datasets[3].data.push(sI);
-    pvChart.data.datasets[4].data.push(P);
-    pvChart.data.datasets[5].data.push(sP);
-
     pvChart.update();
 
-    csvData.push({ time, V, sV, I, sI, P, sP });
+    // ===== TABLE (DATA ASLI SAJA) =====
+    tableData.push({
+        time: d.time,
+        voltage: V,
+        current: I,
+        power: P
+    });
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${d.time}</td>
+        <td>${V}</td>
+        <td>${I}</td>
+        <td>${P}</td>
+    `;
+    tableBody.prepend(row);
 });
 
-// ===== EXPORT CSV =====
-function exportCSV() {
-    if (csvData.length === 0) {
+// ===== EXPORT CSV DARI TABEL =====
+function exportTableCSV() {
+    if (tableData.length === 0) {
         alert("Data masih kosong");
         return;
     }
 
-    let csv = "Waktu,V,V_smooth,I,I_smooth,P,P_smooth\n";
-    csvData.forEach(r => {
-        csv += `${r.time},${r.V},${r.sV},${r.I},${r.sI},${r.P},${r.sP}\n`;
+    let csv = "Waktu,Tegangan(V),Arus(A),Daya(W)\n";
+    tableData.forEach(d => {
+        csv += `${d.time},${d.voltage},${d.current},${d.power}\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -110,11 +131,12 @@ function exportCSV() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "monitoring_pv.csv";
+    a.download = "data_monitoring.csv";
     a.click();
 }
 
  
+
 
 
 
