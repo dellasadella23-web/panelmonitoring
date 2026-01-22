@@ -1,3 +1,8 @@
+// ================= LOKASI PANEL SURYA =================
+const LATITUDE  = 1.0811121649669915;
+const LONGITUDE = 103.9484806101133;
+
+
 // ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyAhWcjyyjzd1dUAZEJ2fvGlFt1iCKCkYuE",
@@ -8,6 +13,30 @@ const firebaseConfig = {
   messagingSenderId: "536143725994",
   appId: "1:536143725994:web:eb2c422612fe3804a5d7d3"
 };
+// ================= API CUACA =================
+const WEATHER_API_KEY = "ISI_API_KEY_OPENWEATHER_KAMU";
+
+function getWeather() {
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=metric&lang=id&appid=${WEATHER_API_KEY}`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("weatherTemp").innerText =
+        data.main.temp.toFixed(1) + " °C";
+
+      document.getElementById("weatherDesc").innerText =
+        data.weather[0].description;
+
+      document.getElementById("weatherCity").innerText =
+        data.name;
+    })
+    .catch(err => console.error("Weather error:", err));
+}
+
+// Update cuaca tiap 10 menit
+getWeather();
+setInterval(getWeather, 600000);
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
@@ -161,3 +190,4 @@ monitoringRef.on("value", snap => {
 
   pvChart.update();
 });
+
