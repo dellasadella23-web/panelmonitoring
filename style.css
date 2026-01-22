@@ -115,4 +115,25 @@ button:hover {
     height: 400px;   /* WAJIB */
 }
 
+.table-box {
+  margin: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background-color: #2196f3;
+  color: white;
+}
+
 
