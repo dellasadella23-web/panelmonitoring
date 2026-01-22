@@ -1,9 +1,13 @@
-// ================= LOKASI PANEL SURYA =================
+// =====================================================
+// =============== LOKASI PANEL SURYA ==================
+// =====================================================
 const LATITUDE  = 1.0811121649669915;
 const LONGITUDE = 103.9484806101133;
 
 
-// ================= FIREBASE =================
+// =====================================================
+// ================= FIREBASE (KODE LAMA) ===============
+// =====================================================
 const firebaseConfig = {
   apiKey: "AIzaSyAhWcjyyjzd1dUAZEJ2fvGlFt1iCKCkYuE",
   authDomain: "panelmonitoring-9fda2.firebaseapp.com",
@@ -13,36 +17,15 @@ const firebaseConfig = {
   messagingSenderId: "536143725994",
   appId: "1:536143725994:web:eb2c422612fe3804a5d7d3"
 };
-// ================= API CUACA =================
-const WEATHER_API_KEY = "ISI_API_KEY_OPENWEATHER_KAMU";
-
-function getWeather() {
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=metric&lang=id&appid=${WEATHER_API_KEY}`;
-
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("weatherTemp").innerText =
-        data.main.temp.toFixed(1) + " °C";
-
-      document.getElementById("weatherDesc").innerText =
-        data.weather[0].description;
-
-      document.getElementById("weatherCity").innerText =
-        data.name;
-    })
-    .catch(err => console.error("Weather error:", err));
-}
-
-// Update cuaca tiap 10 menit
-getWeather();
-setInterval(getWeather, 600000);
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const monitoringRef = database.ref("monitoring");
 
-// ================= CHART =================
+
+// =====================================================
+// ================= CHART (KODE LAMA) =================
+// =====================================================
 const ctx = document.getElementById("pvChart").getContext("2d");
 
 const pvChart = new Chart(ctx, {
@@ -88,27 +71,27 @@ const pvChart = new Chart(ctx, {
   }
 });
 
+
 // =====================================================
-// ===== BATTERY CONFIG (12V 20Ah) =====
+// =============== KONFIGURASI BATERAI =================
 // =====================================================
 const BATTERY_VOLTAGE = 12;
 const BATTERY_CAPACITY = 20;
 const BATTERY_WH = BATTERY_VOLTAGE * BATTERY_CAPACITY; // 240 Wh
 const SCC_EFFICIENCY = 0.9;
-const INTERVAL_SECONDS = 30; // SAMAKAN dengan interval ESP32
+const INTERVAL_SECONDS = 30;
 
 let totalEnergyWh = 0;
 
-// ================= HITUNG SOC =================
+
+// ================= HITUNG SOC BATERAI =================
 function updateBatterySOC(power) {
   if (power <= 0) return;
 
   const energy = power * (INTERVAL_SECONDS / 3600) * SCC_EFFICIENCY;
   totalEnergyWh += energy;
 
-  if (totalEnergyWh > BATTERY_WH) {
-    totalEnergyWh = BATTERY_WH;
-  }
+  if (totalEnergyWh > BATTERY_WH) totalEnergyWh = BATTERY_WH;
 
   const soc = (totalEnergyWh / BATTERY_WH) * 100;
 
@@ -116,7 +99,8 @@ function updateBatterySOC(power) {
   if (socEl) socEl.innerText = soc.toFixed(1);
 }
 
-// ================= STATUS DAYA =================
+
+// ================= STATUS DAYA PANEL =================
 const POWER_NORMAL = 12.5;
 const POWER_WARNING = 11.25;
 
@@ -133,7 +117,10 @@ function updatePowerStatus(power) {
   }
 }
 
-// ================= REALTIME DATA =================
+
+// =====================================================
+// ================= REALTIME DATA =====================
+// =====================================================
 monitoringRef.on("value", snap => {
   if (!snap.exists()) return;
 
@@ -141,10 +128,8 @@ monitoringRef.on("value", snap => {
 
   if (typeof d === "object" && !d.pv_voltage) {
     const keys = Object.keys(d);
-    if (keys.length === 0) return;
     d = d[keys[keys.length - 1]];
   }
-
   if (!d) return;
 
   const V = parseFloat(d.pv_voltage);
@@ -153,27 +138,12 @@ monitoringRef.on("value", snap => {
 
   if (isNaN(V) || isNaN(I) || isNaN(P)) return;
 
-  // UPDATE TEXT
   document.getElementById("voltage").innerText = V.toFixed(2);
   document.getElementById("current").innerText = I.toFixed(2);
   document.getElementById("power").innerText = P.toFixed(2);
 
-  // HITUNG SOC DARI DAYA
+  // TAMBAHAN (BATERAI & STATUS DAYA)
   updateBatterySOC(P);
-
-  // STATUS TEGANGAN (kode lama)
-  const statusBox = document.getElementById("statusBox");
-  const statusText = document.getElementById("statusText");
-
-  if (V < 41.10) {
-    statusBox.className = "status warning";
-    statusText.innerText = "WARNING - TEGANGAN RENDAH";
-  } else {
-    statusBox.className = "status normal";
-    statusText.innerText = "NORMAL";
-  }
-
-  // STATUS DAYA
   updatePowerStatus(P);
 
   const time = new Date().toLocaleTimeString();
@@ -191,3 +161,29 @@ monitoringRef.on("value", snap => {
   pvChart.update();
 });
 
+
+// =====================================================
+// ================= CUACA PANEL (OPEN-METEO) ===========
+// =====================================================
+function getWeather() {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (!data.current_weather) return;
+
+      document.getElementById("weatherTemp").innerText =
+        data.current_weather.temperature + " °C";
+
+      document.getElementById("weatherDesc").innerText =
+        "Angin: " + data.current_weather.windspeed + " km/jam";
+
+      document.getElementById("weatherCity").innerText =
+        "Lokasi Panel Surya";
+    })
+    .catch(err => console.error("Weather error:", err));
+}
+
+getWeather();
+setInterval(getWeather, 600000);
