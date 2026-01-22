@@ -155,3 +155,78 @@ monitoringRef.on("value", snap => {
 
   pvChart.update();
 });
+// =====================================================
+// ===== TAMBAHAN: MONITORING BATERAI 12V 20Ah =====
+// =====================================================
+
+// PARAMETER BATERAI
+const BATTERY_VOLTAGE = 12;      // Volt
+const BATTERY_CAPACITY = 20;     // Ah
+const BATTERY_ENERGY = BATTERY_VOLTAGE * BATTERY_CAPACITY; // 240 Wh
+const SCC_EFFICIENCY = 0.9;      // 90% (MPPT asumsi)
+
+// THRESHOLD DAYA (berdasarkan analisis sebelumnya)
+const POWER_NORMAL = 12.5;   // W
+const POWER_WARNING = 11.25; // W (−10%)
+
+// HITUNG SOC BATERAI (per interval)
+function calculateBatterySOC(power, intervalMinutes = 30) {
+  const powerToBattery = power * SCC_EFFICIENCY;
+  const energyIn = powerToBattery * (intervalMinutes / 60); // Wh
+  const soc = (energyIn / BATTERY_ENERGY) * 100;
+  return soc.toFixed(2);
+}
+
+// STATUS BERDASARKAN DAYA PANEL
+function updatePowerStatus(power) {
+  const statusBox = document.getElementById("statusBox");
+  const statusText = document.getElementById("statusText");
+
+  if (power < POWER_WARNING) {
+    statusBox.className = "status danger";
+    statusText.innerText = "⚠️ PERINGATAN: DAYA PANEL TURUN";
+  } 
+  else if (power < POWER_NORMAL) {
+    statusBox.className = "status warning";
+    statusText.innerText = "WASPADA: DAYA MENDEKATI BATAS";
+  }
+  // jika >= POWER_NORMAL → TIDAK override NORMAL dari kode lama
+}
+
+// =====================================================
+// ===== INTEGRASI KE DATA REALTIME (TANPA UBAH LOGIKA) =====
+// =====================================================
+
+// Listener tambahan (tidak mengganggu listener lama)
+monitoringRef.on("value", snap => {
+  if (!snap.exists()) return;
+
+  let d = snap.val();
+
+  if (typeof d === "object" && !d.pv_voltage) {
+    const keys = Object.keys(d);
+    if (keys.length === 0) return;
+    d = d[keys[keys.length - 1]];
+  }
+
+  if (!d) return;
+
+  const P = parseFloat(d.pv_power);
+  if (isNaN(P)) return;
+
+  // HITUNG SOC BATERAI
+  const soc = calculateBatterySOC(P);
+
+  // Jika di HTML ada elemen SoC
+  const socEl = document.getElementById("soc");
+  if (socEl) {
+    socEl.innerText = soc;
+  }
+
+  // CEK PENURUNAN DAYA PANEL
+  updatePowerStatus(P);
+
+  // DEBUG (opsional, bisa dihapus)
+  console.log("SoC Baterai:", soc + "%");
+});
+
