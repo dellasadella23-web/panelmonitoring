@@ -116,6 +116,7 @@ function updatePowerStatus(power) {
     statusText.innerText = "WASPADA: DAYA MENURUN";
   }
 }
+let tableData = [];
 
 
 // =====================================================
@@ -187,3 +188,4 @@ function getWeather() {
 
 getWeather();
 setInterval(getWeather, 600000);
+
