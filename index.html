@@ -43,103 +43,14 @@
         <h3>Daya</h3>
         <p><span id="power">-</span> W</p>
     </div>
-    <div class="card">
-        <h3>SoC Baterai</h3>
-        <p><span id="soc">-</span> %</p>
-    </div>
 </div>
 
 <div class="chart-box">
     <h2>Grafik Asli vs Exponential Smoothing</h2>
     <canvas id="pvChart"></canvas>
 </div>
+   
 
-<script>
-/**************** PARAMETER BATERAI ****************/
-const BATTERY_VOLTAGE = 12;
-const BATTERY_CAPACITY = 20; // Ah
-const BATTERY_ENERGY = BATTERY_VOLTAGE * BATTERY_CAPACITY; // 240 Wh
-const SCC_EFFICIENCY = 0.9; // 90%
-
-// Threshold daya
-const POWER_NORMAL = 12.5;
-const POWER_WARNING = 11.25;
-
-/**************** FIREBASE CONFIG ****************/
-var firebaseConfig = {
-    // konfigurasi firebase kamu
-};
-firebase.initializeApp(firebaseConfig);
-var database = firebase.database();
-
-/**************** FUNGSI ****************/
-function calculateBattery(power, intervalMinutes = 30) {
-    const powerToBattery = power * SCC_EFFICIENCY;
-    const energyIn = powerToBattery * (intervalMinutes / 60);
-    const soc = (energyIn / BATTERY_ENERGY) * 100;
-    return soc.toFixed(2);
-}
-
-function updateStatus(power) {
-    const statusBox = document.getElementById("statusBox");
-    const statusText = document.getElementById("statusText");
-
-    if (power < POWER_WARNING) {
-        statusBox.className = "status danger";
-        statusText.innerText = "⚠️ PERINGATAN: DAYA TURUN - CEK PANEL";
-    } else if (power < POWER_NORMAL) {
-        statusBox.className = "status warning";
-        statusText.innerText = "WASPADA: DAYA MENDEKATI BATAS";
-    } else {
-        statusBox.className = "status normal";
-        statusText.innerText = "NORMAL";
-    }
-}
-
-/**************** CHART ****************/
-const ctx = document.getElementById('pvChart').getContext('2d');
-const pvChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Daya (W)',
-            data: [],
-            fill: false,
-            borderWidth: 2
-        }]
-    },
-    options: { responsive: true }
-});
-
-/**************** FIREBASE LISTENER ****************/
-database.ref("data").limitToLast(1).on("value", snapshot => {
-    snapshot.forEach(child => {
-        const data = child.val();
-
-        const voltage = parseFloat(data.voltage);
-        const current = parseFloat(data.current);
-        const power   = parseFloat(data.power);
-
-        document.getElementById("voltage").innerText = voltage.toFixed(2);
-        document.getElementById("current").innerText = current.toFixed(2);
-        document.getElementById("power").innerText   = power.toFixed(2);
-
-        const soc = calculateBattery(power);
-        document.getElementById("soc").innerText = soc;
-
-        updateStatus(power);
-
-        pvChart.data.labels.push(new Date().toLocaleTimeString());
-        pvChart.data.datasets[0].data.push(power);
-        pvChart.update();
-    });
-});
-
-function exportCSV() {
-    alert("Fitur export CSV masih menggunakan fungsi lama");
-}
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
